@@ -1,0 +1,55 @@
+<div id="clientePage" class="page">
+    <div class="header">
+        <h1>🛌 Supermarket Finder</h1>
+        <div class="header-buttons">
+            <button class="btn btn-secondary" onclick="loadPage('lojista')">Voltar para Painel</button>
+            <button class="btn btn-logout" onclick="logout()">Sair</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="client-layout">
+            <!-- Coluna Esquerda: Pesquisa e Resultados -->
+            <div class="client-left">
+                <!-- Barra de Pesquisa -->
+                <div class="search-section">
+                    <h2>Procurar Produtos</h2>
+                    <form id="searchForm" class="search-form">
+                        <input type="text" id="searchInput" placeholder="Ex: Leite, Pão, Maçã..." required>
+                        <button type="submit" class="btn btn-primary">Procurar</button>
+                    </form>
+                </div>
+
+                <!-- Resultados -->
+                <div class="results-section">
+                    <h2>Resultados</h2>
+                    <div id="searchResults" class="results-list">
+                        <p class="empty-message">Digite um produto para procurar</p>
+                    </div>
+                </div>
+
+                <!-- Detalhes do Produto Selecionado -->
+                <div class="details-section">
+                    <h2>Localização</h2>
+                    <div id="productDetails" class="product-details">
+                        <p class="empty-message">Selecione um produto para ver sua localização</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna Direita: Mapa da Loja -->
+            <div class="client-right">
+                <div class="store-map-section">
+                    <h2>Mapa da Loja</h2>
+                    <div class="store-map-container">
+                        <img id="storeMapImage" src="" alt="Mapa da loja" class="store-map-image" style="display: none;">
+                        <div id="storeMapPlaceholder" class="store-map-placeholder">
+                            <p>📄 Nenhuma imagem da loja configurada</p>
+                            <small>O lojista pode adicionar a imagem do layout da loja</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

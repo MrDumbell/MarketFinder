@@ -1,0 +1,128 @@
+<div id="lojistaPage" class="page">
+    <div class="header">
+        <h1>📦 Painel do Lojista</h1>
+        <div class="header-buttons">
+            <button class="btn btn-secondary" onclick="loadPage('cliente')">👁️ Ver Cliente View</button>
+            <button class="btn btn-logout" onclick="logout()">Sair</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Abas -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('corridorsTab')">Corredores</button>
+            <button class="tab-btn" onclick="switchTab('shelvesTab')">Prateleiras</button>
+            <button class="tab-btn" onclick="switchTab('productsTab')">Produtos</button>
+            <button class="tab-btn" onclick="switchTab('storeImageTab')">Imagem da Loja</button>
+        </div>
+
+        <!-- Aba de Corredores -->
+        <div id="corridorsTab" class="tab-content active">
+            <h2>Gestão de Corredores</h2>
+
+            <div class="form-section">
+                <h3>Adicionar Corredor</h3>
+                <form id="addCorridorForm" class="form">
+                    <div class="form-group">
+                        <input type="text" id="corridorName" placeholder="Nome do corredor (ex: Corredor 1)" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Adicionar</button>
+                </form>
+            </div>
+
+            <div id="corridorsList" class="items-list">
+                <!-- Corredores serão adicionados aqui pelo JavaScript -->
+            </div>
+        </div>
+
+        <!-- Aba de Prateleiras -->
+        <div id="shelvesTab" class="tab-content">
+            <h2>Gestão de Prateleiras</h2>
+
+            <div class="form-section">
+                <h3>Adicionar Prateleira</h3>
+                <form id="addShelfForm" class="form">
+                    <div class="form-group">
+                        <label>Corredor:</label>
+                        <select id="shelfCorridor" required>
+                            <option value="">Selecione um corredor</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="shelfName" placeholder="Nome da prateleira (ex: Prateleira A)" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Adicionar</button>
+                </form>
+            </div>
+
+            <div id="shelvesList" class="items-list">
+                <!-- Prateleiras serão adicionadas aqui pelo JavaScript -->
+            </div>
+        </div>
+
+        <!-- Aba de Produtos -->
+        <div id="productsTab" class="tab-content">
+            <h2>Gestão de Produtos</h2>
+
+            <div class="form-section">
+                <h3>Adicionar Produto</h3>
+                <form id="addProductForm" class="form">
+                    <div class="form-group">
+                        <input type="text" id="productName" placeholder="Nome do produto" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="number" id="productPrice" placeholder="Preço (€)" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="productDesc" placeholder="Descrição" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Corredor (Opcional):</label>
+                        <select id="productCorridor">
+                            <option value="">Nenhum</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Prateleira (Opcional):</label>
+                        <select id="productShelf">
+                            <option value="">Nenhuma</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Adicionar Produto</button>
+                </form>
+            </div>
+
+            <div id="productsList" class="items-list">
+                <!-- Produtos serão adicionados aqui pelo JavaScript -->
+            </div>
+        </div>
+
+        <!-- Aba de Imagem da Loja -->
+        <div id="storeImageTab" class="tab-content">
+            <h2>Imagem do Layout da Loja</h2>
+
+            <div class="form-section">
+                <h3>Upload da Imagem</h3>
+                <form id="uploadImageForm" class="form">
+                    <div class="form-group">
+                        <label for="storeImageInput">Selecione a imagem PNG do layout da loja:</label>
+                        <input type="file" id="storeImageInput" accept="image/png,image/jpeg,image/jpg" required>
+                        <small>Formatos aceitos: PNG, JPG, JPEG</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </form>
+            </div>
+
+            <div class="form-section">
+                <h3>Pré-visualização</h3>
+                <div class="store-map-container">
+                    <img id="uploadedMapImage" src="" alt="Mapa da loja" class="store-map-image" style="display: none;">
+                    <div id="uploadedMapPlaceholder" class="store-map-placeholder">
+                        <p>📄 Nenhuma imagem carregada</p>
+                        <small>Faça upload de uma imagem para visualizar</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
