@@ -16,7 +16,7 @@ public class CorredorRequest {
 
     @SuppressWarnings("deprecation")
     @NotNull
-    private String name;
+    private String nome;
 
     // opcional: id da loja (quando o frontend fornece explicitamente)
     private Long storeId;

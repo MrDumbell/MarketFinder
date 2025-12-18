@@ -1,7 +1,7 @@
 package com.paf.Api.Controller;
 
 import com.paf.Api.Dto.CorredorRequest;
-import com.paf.Api.Dto.CorredorResponde;
+import com.paf.Api.Dto.CorredorResponde; // Nota: Mantive o teu nome "Responde"
 import com.paf.Domain.Mappers.CorredorMapper;
 import com.paf.Domain.Models.CorredorModel;
 import com.paf.Infrastructure.Entities.CorredorEntity;
@@ -13,13 +13,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/corredores")
+@RequestMapping("/Corredor")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true") // 1. FIX CORS
 public class CorredorController {
 
     @Autowired
@@ -28,33 +29,56 @@ public class CorredorController {
     @Autowired
     private PrateleiraRepository prateleiraRepository;
 
-    // Setter público para ser chamado pelo caller/teste para definir o usuário atual
     @Setter
-    private Long currentUserId; // definido externamente via setter
+    private Long currentUserId;
 
+    // --- LISTAR (GET) ---
     @GetMapping("/CGet")
-    public ResponseEntity<CorredorResponde> GetbyName (@RequestParam String nome){
-        Optional<CorredorEntity> opt = corredorRepository.findByNome(nome);
-        if (opt.isEmpty()) return ResponseEntity.notFound().build();
-        CorredorModel m = CorredorMapper.toModel(opt.get());
-        return ResponseEntity.ok(CorredorResponde.fromModel(m));
+    public ResponseEntity<List<CorredorResponde>> GetbyName(@RequestParam(required = false) String nome) {
+
+        List<CorredorEntity> entidades;
+
+        // 1. Se não vier nome, busca TODOS
+        if (nome == null || nome.isEmpty()) {
+            entidades = corredorRepository.findAll();
+        }
+        // 2. Se vier nome, busca ESPECÍFICO
+        else {
+            Optional<CorredorEntity> opt = corredorRepository.findByNome(nome);
+            // FIX: Se não encontrar, retorna lista vazia em vez de 404 (para o React não falhar)
+            if (opt.isEmpty()) {
+                return ResponseEntity.ok(Collections.emptyList());
+            }
+            entidades = List.of(opt.get());
+        }
+
+        List<CorredorResponde> resposta = entidades.stream()
+                .map(CorredorMapper::toModel)
+                .map(CorredorResponde::fromModel)
+                .collect(Collectors.toList());
+
+        // FIX: Retorna sempre 200 OK
+        return ResponseEntity.ok(resposta);
     }
 
+    // --- CRIAR (POST) ---
     @PostMapping("/CPost")
     public ResponseEntity<CorredorResponde> CreateCorredor (@RequestBody CorredorRequest request){
-        if (request == null || request.getName() == null) return ResponseEntity.badRequest().build();
+        // Validação básica
+        if (request == null || request.getNome() == null) {
+            return ResponseEntity.badRequest().build();
+        }
 
         CorredorModel model = new CorredorModel();
-        model.setName(request.getName());
+        model.setName(request.getNome());
 
-        // garante que o storeId seja sempre o id do usuário configurado ou do request
+        // Lógica do StoreId
         if (this.currentUserId != null) {
             model.setStoreId(this.currentUserId);
         } else if (request.getStoreId() != null) {
             model.setStoreId(request.getStoreId());
         } else {
-            // fallback mínimo: setar loja 1 se não for fornecido (para dev).
-            model.setStoreId(1L);
+            model.setStoreId(1L); // Default
         }
 
         CorredorEntity entity = CorredorMapper.toEntity(model);
@@ -64,6 +88,7 @@ public class CorredorController {
         return ResponseEntity.status(HttpStatus.CREATED).body(CorredorResponde.fromModel(savedModel));
     }
 
+    // --- ATUALIZAR (PUT) ---
     @PutMapping("/CUpdt")
     public ResponseEntity<CorredorResponde> UpdateCorredor (@RequestBody CorredorRequest request){
         if (request == null || request.getId() == null) return ResponseEntity.badRequest().build();
@@ -73,11 +98,9 @@ public class CorredorController {
 
         CorredorModel model = CorredorMapper.toModel(opt.get());
 
-        // aplicar alterações vindas do request
-        if (request.getName() != null)
-            model.setName(request.getName());
 
-        // garante que o storeId seja sempre o id do usuário configurado
+        if (request.getNome() != null)
+            model.setName(request.getNome());
         if (this.currentUserId != null) {
             model.setStoreId(this.currentUserId);
         }
@@ -90,11 +113,13 @@ public class CorredorController {
         return ResponseEntity.ok(CorredorResponde.fromModel(savedModel));
     }
 
-    @DeleteMapping("/CDel/{id}")
-    public ResponseEntity<Void> DeleteCorredor (@PathVariable Long id){
+    // --- APAGAR (DELETE) ---
+    // 2. FIX: Mudei para /CDelete e @RequestParam para bater certo com o api.js
+    @DeleteMapping("/CDelete")
+    public ResponseEntity<Void> DeleteCorredor (@RequestParam Long id){
         if (!corredorRepository.existsById(id)) return ResponseEntity.notFound().build();
 
-        // apagar prateleiras associadas primeiro para evitar constraint de FK
+        // Apagar prateleiras órfãs primeiro
         List<PrateleiraEntity> shelves = prateleiraRepository.findByIdCorredor(id);
         if (shelves != null && !shelves.isEmpty()) {
             prateleiraRepository.deleteAll(shelves);
@@ -104,13 +129,20 @@ public class CorredorController {
         return ResponseEntity.noContent().build();
     }
 
+    // --- GET POR LOJA (Extra) ---
     @GetMapping("/CGetByStore/{storeId}")
     public ResponseEntity<List<CorredorResponde>> GetByStore(@PathVariable Long storeId) {
         List<CorredorEntity> list = corredorRepository.findByIdLoja(storeId);
-        if (list == null || list.isEmpty()) return ResponseEntity.notFound().build();
-        List<CorredorResponde> resp = list.stream().map(c -> {
-            return CorredorResponde.fromModel(CorredorMapper.toModel(c));
-        }).collect(Collectors.toList());
+
+        // FIX: Retorna lista vazia se não encontrar
+        if (list == null || list.isEmpty()) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+
+        List<CorredorResponde> resp = list.stream()
+                .map(c -> CorredorResponde.fromModel(CorredorMapper.toModel(c)))
+                .collect(Collectors.toList());
+
         return ResponseEntity.ok(resp);
     }
 }

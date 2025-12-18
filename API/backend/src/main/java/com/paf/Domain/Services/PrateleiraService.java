@@ -1,4 +1,3 @@
-// API/backend/src/main/java/com/paf/Domain/Services/PrateleiraService.java
 package com.paf.Domain.Services;
 
 import com.paf.Domain.Mappers.PrateleiraMapper;
@@ -8,6 +7,7 @@ import com.paf.Infrastructure.Repository.PrateleiraRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -22,32 +22,53 @@ public class PrateleiraService {
     }
 
     /**
-     * Garante que a prateleira tenha o id do corredor associado.
-     * Use no Controller: service.ensureCorredorId(prateleiraModel, corredorId);
+     * MUDANÇA 1: Return Type
+     * Antes retornava String. Agora retorna PrateleirasModel.
+     * Motivo: O Controller precisa do objeto criado (com o ID gerado) para devolver ao React.
      */
-    public PrateleirasModel ensureCorredorId(PrateleirasModel prateleira, Long corredorId) {
-        if (prateleira == null) {
-            return null;
-        }
-        prateleira.setCorredorId(corredorId);
-        return prateleira;
-    }
-
-    // Cria prateleira simples (assume corredorId já setado no model via ensureCorredorId se necessário)
-    public String createPrateleira(PrateleirasModel model) {
-        if (model == null) return "Invalid prateleira";
+    public PrateleirasModel createPrateleira(PrateleirasModel model) {
+        if (model == null) return null;
 
         PrateleiraEntity entity = PrateleiraMapper.toEntity(model);
-
         PrateleiraEntity saved = repository.save(entity);
-        model.setId(saved.getId());
-        return "Shelf created with id: " + saved.getId();
+
+        // Retorna o modelo completo com o ID novo
+        return PrateleiraMapper.toModel(saved);
     }
+
+    /**
+     * MUDANÇA 2: Método getAll()
+     * Motivo: O Controller chama isto quando o React pede a lista sem filtros.
+     */
+    public List<PrateleirasModel> getAll() {
+        List<PrateleiraEntity> entities = repository.findAll();
+        if (entities.isEmpty()) return Collections.emptyList();
+
+        return entities.stream()
+                .map(PrateleiraMapper::toModel)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * MUDANÇA 3: Método getByName()
+     * Motivo: O Controller chama isto quando o React faz uma pesquisa (?nome=X).
+     */
+    public List<PrateleirasModel> getByName(String name) {
+        if (name == null) return Collections.emptyList();
+
+        // Opção A: Se o teu Repository tiver findByNomeContaining, usa-o (Melhor Performance).
+        // Opção B: Filtrar aqui no Java (Seguro se não quiseres mexer no Repository agora):
+        return repository.findAll().stream()
+                .filter(e -> e.getNome() != null && e.getNome().toLowerCase().contains(name.toLowerCase()))
+                .map(PrateleiraMapper::toModel)
+                .collect(Collectors.toList());
+    }
+
+    // --- MÉTODOS ANTIGOS MANTIDOS ---
 
     public PrateleirasModel getById(Long id) {
         Optional<PrateleiraEntity> opt = repository.findById(id);
-        if (opt.isEmpty()) return null;
-        return PrateleiraMapper.toModel(opt.get());
+        return opt.map(PrateleiraMapper::toModel).orElse(null);
     }
 
     public boolean deletePrateleira(Long id) {
@@ -60,22 +81,27 @@ public class PrateleiraService {
         if (model == null || model.getId() == null) return null;
         Optional<PrateleiraEntity> opt = repository.findById(model.getId());
         if (opt.isEmpty()) return null;
+
         PrateleiraEntity entity = opt.get();
-
-        // atualiza campos via mapper
         PrateleiraMapper.updateEntityFromModel(entity, model);
-
         PrateleiraEntity saved = repository.save(entity);
-
         return PrateleiraMapper.toModel(saved);
     }
 
     public List<PrateleirasModel> getByCorredor(Long corredorId) {
-        if (corredorId == null) return java.util.Collections.emptyList();
-        List<PrateleiraEntity> entities = repository.findAll();
-        return entities.stream()
+        if (corredorId == null) return Collections.emptyList();
+        // Nota: Idealmente deves ter findByIdCorredor no Repository, mas isto funciona:
+        return repository.findAll().stream()
                 .filter(e -> corredorId.equals(e.getIdCorredor()))
                 .map(PrateleiraMapper::toModel)
                 .collect(Collectors.toList());
+    }
+
+    // Método auxiliar ensureCorredorId mantido se o usares noutro lado
+    public PrateleirasModel ensureCorredorId(PrateleirasModel prateleira, Long corredorId) {
+        if (prateleira != null) {
+            prateleira.setCorredorId(corredorId);
+        }
+        return prateleira;
     }
 }

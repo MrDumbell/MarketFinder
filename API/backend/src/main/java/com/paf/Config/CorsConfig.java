@@ -13,10 +13,14 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")                     // permite todos os endpoints
-                        .allowedOrigins("http://127.0.0.1:5500") // origem do teu Live Server
-                        .allowedMethods("GET","POST","PUT","DELETE","OPTIONS") // métodos permitidos
-                        .allowedHeaders("*")                     // headers permitidos
+                registry.addMapping("/**")
+                        .allowedOrigins(
+                                "http://127.0.0.1:5500", // Antigo (Live Server)
+                                "http://localhost:5173", // Novo (React/Vite)
+                                "http://127.0.0.1:5173"  // Variante do React
+                        )
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedHeaders("*")
                         .allowCredentials(true);
             }
         };
